@@ -486,7 +486,20 @@ sub tab_key_press {
       return 1;
    }
 
-   if ($event->{state} & urxvt::ShiftMask) {
+   if (($event->{state} & (urxvt::Mod4Mask | urxvt::ShiftMask)) == (urxvt::Mod4Mask | urxvt::ShiftMask)) {
+      if ($keysym == 0xff51 || $keysym == 0xff53) {
+         if (@{ $self->{tabs} } > 1) {
+            my $idx1 = 0;
+            ++$idx1 while $self->{tabs}[$idx1] != $tab;
+            my $idx2 = ($idx1 + $keysym - 0xff52) % @{ $self->{tabs} };
+
+            ($self->{tabs}[$idx1], $self->{tabs}[$idx2]) =
+                ($self->{tabs}[$idx2], $self->{tabs}[$idx1]);
+            $self->make_current ($self->{tabs}[$idx2]);
+         }
+         return 1;
+      }
+   } elsif (($event->{state} & urxvt::Mod4Mask) == urxvt::Mod4Mask) {
       if ($keysym == 0xff51 || $keysym == 0xff53) {
          if (@{ $self->{tabs} } > 1) {
             $self->change_tab($tab, $keysym - 0xff52);
@@ -504,19 +517,6 @@ sub tab_key_press {
          $tab->{name} = "█";
          $self->update_autohide (1);
          $self->refresh;
-         return 1;
-      }
-   } elsif ($event->{state} & urxvt::ControlMask) {
-      if ($keysym == 0xff51 || $keysym == 0xff53) {
-         if (@{ $self->{tabs} } > 1) {
-            my $idx1 = 0;
-            ++$idx1 while $self->{tabs}[$idx1] != $tab;
-            my $idx2 = ($idx1 + $keysym - 0xff52) % @{ $self->{tabs} };
-
-            ($self->{tabs}[$idx1], $self->{tabs}[$idx2]) =
-                ($self->{tabs}[$idx2], $self->{tabs}[$idx1]);
-            $self->make_current ($self->{tabs}[$idx2]);
-         }
          return 1;
       }
    }
